@@ -1,0 +1,318 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Brevium Interview 2021 API",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/Scheduling/Start": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Hit this endpoint to reset the test system before each 'run' of your program.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "Your unique API token",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "It worked."
+          },
+          "401": {
+            "description": "Your token is invalid."
+          }
+        }
+      }
+    },
+    "/api/Scheduling/Stop": {
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "This is an optional endpoint that will allow you to mark a test run as 'done'. The API will then return the current schedule as you have requested it, for your debugging pleasure.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "Your unique API token",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The schedule is now read only. Returned is the state of the schedule. Note that each appointment time is returned in UTC time, which is local time to the practice.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppointmentInfo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Your token is invalid."
+          }
+        }
+      }
+    },
+    "/api/Scheduling/AppointmentRequest": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Returns the next appointment request to be serviced.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "Your unique API token",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The next appointment request has been returned. Note that the appointment time will be expressed in UTC. While the example may have minutes and seconds real results never will.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentRequest"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentRequest"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppointmentRequest"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "There are no more requests to handle."
+          },
+          "405": {
+            "description": "You have already called the stop endpoint for this run."
+          },
+          "401": {
+            "description": "Your token is invalid."
+          }
+        }
+      }
+    },
+    "/api/Scheduling/Schedule": {
+      "get": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Returns the initial monthly schedule.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "Your unique API token",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns a list of the initially scheduled appointments. Note that the appointment time will be expressed in UTC. While the example may have minutes and seconds real results never will.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppointmentInfo"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppointmentInfo"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AppointmentInfo"
+                  }
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "The schedule has already been retrieved for this 'run'. You must hit the Start endpoint to reset the system."
+          },
+          "401": {
+            "description": "Your token is invalid."
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Scheduling"
+        ],
+        "summary": "Marks an appointment slot as taken.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "Your unique API token",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The information about the appointment you'd like to set. <br /><br />Note that the appointmentTime should be in the practice time (UTC). You may send dates in the ISO 8601 format (with timezone information and as shown in the example) or in that same format but without the timezone information.<br /><br />If you submit without the timezone information the time will be assumed to be in UTC time. For example: '2021-10-14T15:00:00.000' is interpreted as '2021-10-14T15:00:00.000Z'<br /><br />If you submit but with a timezone offset it will be converted into UTC time.For example: '2021-10-14T15:00:00.000-06:00' is converted to '2021-10-14T21:00:00.000Z'",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppointmentInfoRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppointmentInfoRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppointmentInfoRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The schedule has been updated."
+          },
+          "405": {
+            "description": "You have already called the stop endpoint for this run."
+          },
+          "500": {
+            "description": "The schedule was unable to accomodate your requested appointment"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AppointmentInfo": {
+        "type": "object",
+        "properties": {
+          "doctorId": {
+            "$ref": "#/components/schemas/Doctor"
+          },
+          "personId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "appointmentTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isNewPatientAppointment": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AppointmentInfoRequest": {
+        "type": "object",
+        "properties": {
+          "doctorId": {
+            "$ref": "#/components/schemas/Doctor"
+          },
+          "personId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "appointmentTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isNewPatientAppointment": {
+            "type": "boolean"
+          },
+          "requestId": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AppointmentRequest": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "personId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "preferredDays": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "nullable": true,
+            "readOnly": true
+          },
+          "preferredDocs": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "isNew": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Doctor": {
+        "enum": [
+          1,
+          2,
+          3
+        ],
+        "type": "integer",
+        "format": "int32"
+      }
+    }
+  }
+}
